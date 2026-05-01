@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Number;
 
 class ProductResource extends JsonResource
 {
@@ -17,14 +18,14 @@ class ProductResource extends JsonResource
         return [
             'id'            => $this->id,
             'name'          => $this->name,
-            'description'   => $this->description,
-            'price'         => $this->price,
+            'description'   => str($this->description)->limit(50),
+            'price'         => Number::currency($this->price, 'RUB', 'ru_RU'),
             'category'      => [
                 'id'    => $this->category->id,
                 'name'  => $this->category->name
             ],
-            'created_at'    => $this->created_at->toISOString(),
-            'updated_at'    => $this->updated_at->toISOString()
+            'created_at'    => $this->created_at->format('Y.m.d H:i:s'),
+            'updated_at'    => $this->updated_at->format('Y.m.d H:i:s')
         ];
     }
 }

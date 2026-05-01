@@ -16,11 +16,6 @@ class ProductCollection extends ResourceCollection
     {
         return [
             'data'  => ProductResource::collection($this->collection),
-            'meta'  => [
-                'total'         => $this->total(),
-                'current_page'  => $this->currentPage(),
-                'per_page'      => $this->perPage()
-            ]
         ];
     }
 }
