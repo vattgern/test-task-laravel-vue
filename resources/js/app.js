@@ -4,9 +4,10 @@ import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import MainLayout from "./Layouts/MainLayout.vue";
 // LIBRARIES
-import PrimeVue from "primevue/config";
-import Aura from "@primeuix/themes/aura";
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
+import('./bootstrap.js');
 
 createInertiaApp({
     resolve: name => {
@@ -29,11 +30,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const VueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(PrimeVue, {
-                theme: {
-                    preset: Aura
-                }
-            });
+            .use(ElementPlus);
 
         VueApp.mount(el);
         return VueApp;
