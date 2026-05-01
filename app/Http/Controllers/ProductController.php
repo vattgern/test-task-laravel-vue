@@ -8,12 +8,19 @@ use App\Http\Resources\ProductCollection;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Override;
 
-class ProductController extends Controller
+class ProductController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    #[Override]
+    public static function middleware()
     {
-        $this->middleware('auth:sacntum')->except(['index', 'show']);
+        return [
+            // 'auth:sanctum'  => [
+            //     'except'    => ['index', 'show']
+            // ]
+        ];
     }
 
     public function index(Request $request)
