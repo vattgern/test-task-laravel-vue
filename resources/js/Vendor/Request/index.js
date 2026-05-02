@@ -9,15 +9,8 @@ export default {
      * @returns Promise
      */
     post(route = '', data = {}, configs = {}) {
-        return new Promise((resolve, reject) => {
-            axios.post(route, data, configs)
-                .then(r => {
-                    resolve(r.data)
-                })
-                .catch((f) => {
-                    reject(f)
-                })
-        })
+        return axios.post(route, data, configs)
+            .then(r => r.data);
     },
     /**
      * GET запрос
@@ -26,15 +19,8 @@ export default {
      * @returns Promise
      */
     get(route = '', config = {}) {
-        return new Promise((resolve, reject) => {
-            axios.get(route, config)
-                .then(r => {
-                    resolve(r.data)
-                })
-                .catch((f) => {
-                    reject(f)
-                })
-        })
+        return axios.get(route, config)
+            .then(r => r.data)
     },
     /**
      * PATCH запрос
@@ -44,15 +30,8 @@ export default {
      * @returns Promise
      */
     patch(route = '', data = {}, configs = {}) {
-        return new Promise((resolve, reject) => {
-            axios.patch(route, data, configs)
-                .then(r => {
-                    resolve(r.data)
-                })
-                .catch((f) => {
-                    reject(f)
-                })
-        })
+        return axios.patch(route, data, configs)
+            .then(r => r.data)
     },
     /**
      * DELETE запрос
@@ -61,14 +40,7 @@ export default {
      * @returns Promise
      */
     delete(route = '', config = {}) {
-        return new Promise((resolve, reject) => {
-            axios.delete(route, config)
-                .then(r => {
-                    resolve(r.data)
-                })
-                .catch((f) => {
-                    reject(f)
-                })
-        })
+        return axios.delete(route, config)
+            .then(r => r.data)
     }
 }

@@ -11,5 +11,7 @@ const props = defineProps({
     <Head>
         <title>{{ props.title }}</title>
     </Head>
-    <slot />
+    <main>
+        <slot />
+    </main>
 </template>

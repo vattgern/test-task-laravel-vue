@@ -4,9 +4,6 @@ import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import MainLayout from "./Layouts/MainLayout.vue";
 // LIBRARIES
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-
 import('./bootstrap.js');
 
 createInertiaApp({
@@ -30,7 +27,6 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const VueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(ElementPlus);
 
         VueApp.mount(el);
         return VueApp;
