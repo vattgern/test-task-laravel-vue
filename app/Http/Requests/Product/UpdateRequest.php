@@ -23,10 +23,10 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => ['sometimes', 'string', 'max:255'],
-            'description'   => ['sometimes', 'string', 'max:1000'],
-            'price'         => ['sometimes', 'numeric', 'min:0', 'max:9999999'],
-            'category_id'   => ['sometimes', 'exists:categories,id']
+            'name'          => ['filled', 'string', 'max:255'],
+            'description'   => ['filled', 'string', 'max:1000'],
+            'price'         => ['filled', 'numeric', 'min:1', 'max:9999999'],
+            'category_id'   => ['filled', 'numeric', 'exists:categories,id']
         ];
     }
 }
