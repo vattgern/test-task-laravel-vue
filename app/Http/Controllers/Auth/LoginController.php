@@ -16,7 +16,7 @@ class LoginController extends Controller
      */
     public function __invoke(LoginRequest $request)
     {
-        $user = User::query()->where('login', $request->email)->first();
+        $user = User::query()->where('login', $request->login)->first();
         if (!Hash::check($request->password, $user->password))
             throw ValidationException::withMessages([
                 'login' => 'Неверный логин или пароль'
