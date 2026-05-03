@@ -1,7 +1,7 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
 import Request from "../../Vendor/Request";
-import { onMounted, ref, reactive } from "vue";
+import { onMounted, ref, reactive, computed } from "vue";
 import Loader from "../../Components/Loader.vue";
 
 const props = defineProps({
@@ -13,6 +13,15 @@ const isFailed = ref(false);
 const state = reactive({
     data: {}
 })
+
+const price = computed(() => {
+    if (!state.data.price) return '';
+
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB'
+    }).format(state.data.price);
+});
 
 const fetchProduct = () => {
     isLoading.value = true;
@@ -52,7 +61,7 @@ onMounted(() => {
         >
             <h1 class="text-3xl font-bold mb-4">{{ state.data?.name }}</h1>
             <p class="text-gray-600 mb-2">{{ state.data?.category?.name }}</p>
-            <p class="text-2xl font-bold text-green-600 mb-4">{{ state.data?.price }}</p>
+            <p class="text-2xl font-bold text-green-600 mb-4">{{ price }}</p>
             <p class="text-gray-700 leading-relaxed">{{ state.data?.description }}</p>
         </div>
     </div>

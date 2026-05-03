@@ -19,7 +19,8 @@ class IndexResource extends JsonResource
             'id'            => $this->id,
             'name'          => $this->name,
             'description'   => $this->description,
-            'price'         => Number::currency($this->price, 'RUB', 'ru_RU'),
+            // 'price'         => Number::currency($this->price, 'RUB', 'ru_RU'),
+            'price'         => $this->price,
             'category'      => [
                 'id'        => $this->category->id,
                 'name'      => $this->category->name,
