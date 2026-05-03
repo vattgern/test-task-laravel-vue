@@ -1,39 +1,15 @@
 <script setup>
-import { router, Link } from "@inertiajs/vue3";
-import { reactive, onMounted } from "vue";
+import { Link } from "@inertiajs/vue3";
+import { onMounted } from "vue";
 import { useAuth } from "../../../Composables/useAuth";
-import Request from "../../../Vendor/Request";
+import { useProductApi } from "../../../Composables/useProductAPI";
 import AdminLayout from "../../../Layouts/AdminLayout.vue";
 
 const { checkAuth } = useAuth();
-const state = reactive({
-    categories: [],
-    errors: {}
-})
+const { state, fetchCategories, createProduct } = useProductApi();
 
-const fetchCategories = () => {
-    Request.get('/api/categories')
-        .then(r => {
-            state.categories = r;
-        })
-};
 const handleSubmit = (e) => {
-    const fd = new FormData(e.target),
-        token = localStorage.getItem('auth_token');
-    if (!token) return;
-
-    Request.post('/api/products', fd, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-        .then(r => {
-            router.visit('/admin/products');
-        })
-        .catch(err => {
-            if (err.response.data && err.response.data.errors)
-                state.errors = err.response.data.errors;
-        })
+    createProduct(new FormData(e.target))
 };
 onMounted(() => {
     checkAuth();

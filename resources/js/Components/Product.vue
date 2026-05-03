@@ -1,5 +1,4 @@
 <script setup>
-import { defineEmits } from "vue";
 import { Link, router } from "@inertiajs/vue3";
 import Request from "../Vendor/Request";
 

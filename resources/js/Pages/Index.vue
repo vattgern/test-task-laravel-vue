@@ -1,63 +1,58 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
 import { onMounted, reactive, ref } from "vue";
-import Request from "../Vendor/Request";
+import { useProductApi } from "../Composables/useProductApi";
 import Loader from "../Components/Loader.vue";
 import Product from "../Components/Product.vue";
 
-const isLoading = ref(false);
 const selectedCategory = ref('');
-const state = reactive({
-    categories: [],
-    products: [],
-    meta: [],
-    url: location.origin + "/api/products",
-});
+const { state, fetchCategories, fetchProducts } = useProductApi();
 
-const fetchProducts = () => {
-    isLoading.value = true;
+const getCurrentParams = () => {
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    if (state.meta?.current_page)
+        params.page = state.meta.current_page;
+    return params;
+}
 
-    Request.get(state.url)
-        .then((r) => {
-            state.products = r.data;
-            state.meta = r.meta;
-        })
-        .finally(() => {
-            isLoading.value = false;
-        });
-};
+const refreshProducts = async () => {
+    let params = getCurrentParams();
 
-const fetchCategories = () => {
-    Request.get('/api/categories')
-        .then(r => {
-            state.categories = r;
-        });
-};
+    await fetchProducts(params);
 
-const handlePage = (v) => {
+    if (state.products.length === 0 && params.page > 1) {
+        params.page--;
+        await fetchProducts(params);
+    }
+}
+
+const handlePage = async (v) => {
     if (!v.url) return;
 
-    state.url = v.url;
-    fetchProducts();
-};
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    params.page = v.page;
 
-const handleCategory = () => {
-    let url = new URL(state.url);
-    if (selectedCategory.value === '') {
-        url.searchParams.delete('category_id');
-    } else if (url.searchParams.has('category_id')) {
-        url.searchParams.set('category_id', selectedCategory.value);
-    } else {
-        url.searchParams.append('category_id', selectedCategory.value);
-    }
+    await fetchProducts(params);
+}
 
-    state.url = url.toString();
-    fetchProducts();
-};
+const handleCategory = async () => {
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    params.page = 1;
 
-onMounted(() => {
-    fetchCategories();
-    fetchProducts();
+    await fetchProducts(params);
+}
+
+onMounted(async () => {
+    await Promise.all([
+        fetchCategories(),
+        fetchProducts()
+    ]);
 });
 </script>
 
@@ -65,7 +60,7 @@ onMounted(() => {
     <div class="container mx-auto px-4 py-8">
 
         <Transition name="fade">
-            <Loader v-if="isLoading" />
+            <Loader v-if="state.loading" />
         </Transition>
 
         <h1 class="text-3xl font-bold mb-8">Каталог товаров</h1>
@@ -87,12 +82,18 @@ onMounted(() => {
             </select>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            v-if="state.products.length"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
             <Product
                 v-for="el in state.products"
                 :key="el.id"
                 :data="el"
             />
+        </div>
+        <div v-else>
+            <p class="text-center">Ничего не найдено</p>
         </div>
 
         <div class="mt-8">
@@ -101,7 +102,7 @@ onMounted(() => {
                     v-for="(el, index) in state.meta.links"
                     :key="index"
                     @click="handlePage(el)"
-                    class="px-3 py-1 border rounded"
+                    class="cursor-pointer px-3 py-1 border rounded"
                     :class="{ 'bg-blue-500 text-white': el.active }"
                     v-html="el.label"
                 />

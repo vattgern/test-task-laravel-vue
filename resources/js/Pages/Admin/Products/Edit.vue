@@ -1,8 +1,8 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { Link, router } from "@inertiajs/vue3";
+import { onMounted } from "vue";
+import { Link } from "@inertiajs/vue3";
 import { useAuth } from "../../../Composables/useAuth";
-import Request from "../../../Vendor/Request";
+import { useProductApi } from "../../../Composables/useProductAPI";
 
 import AdminLayout from "../../../Layouts/AdminLayout.vue";
 import Loader from "../../../Components/Loader.vue";
@@ -12,55 +12,17 @@ const props = defineProps({
     product: [String, Number]
 });
 
+const { state, fetchCategories, fetchProduct, updateProduct } = useProductApi();
 const { checkAuth } = useAuth();
-const isLoading = ref(false);
-const isFailed = ref(false);
-const state = reactive({
-    data: {},
-    categories: [],
-    errors: {}
-});
-
-const fetchProduct = () => {
-    isLoading.value = true;
-    Request.get(`/api/products/${props.product}`)
-        .then(r => {
-            state.data = r.data;
-            isLoading.value = false;
-        })
-        .catch(err => {
-            isFailed.value = true;
-        })
-};
-const fetchCategories = () => {
-    Request.get('/api/categories')
-        .then(r => {
-            state.categories = r;
-        })
-}
 
 const handleSubmit = (e) => {
-    const fd = new FormData(e.target),
-        token = localStorage.getItem('auth_token');
-
-    if (!token) return;
-
-    fd.append('_method', 'PATCH');
-
-    Request.post(`/api/products/${props.product}`, fd, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-        .then(r => {
-            router.visit('/admin/products');
-        })
+    updateProduct(props.product, new FormData(e.target));
 }
 
 onMounted(() => {
     checkAuth();
     fetchCategories();
-    fetchProduct();
+    fetchProduct(props.product);
 });
 defineOptions({
     layout: AdminLayout
@@ -78,17 +40,17 @@ defineOptions({
         </Link>
 
         <Transition name="fade">
-            <Failed v-if="isFailed && isLoading">
+            <Failed v-if="state.failed && !state.loading">
                 Данные о товаре №{{ props.product }} не найдена
             </Failed>
         </Transition>
 
         <Transition name="fade">
-            <Loader v-if="!isFailed && isLoading" />
+            <Loader v-if="!state.failed && state.loading" />
         </Transition>
 
         <form
-            v-if="!isLoading && !isFailed"
+            v-if="!state.loading && !state.failed && state.currentProduct"
             @submit.prevent="handleSubmit"
         >
             <div class="mb-4">
@@ -96,7 +58,7 @@ defineOptions({
                 <input
                     type="text"
                     name="name"
-                    :value="state.data.name"
+                    :value="state.currentProduct.name"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 mb-2"
                     required
                 />
@@ -113,7 +75,7 @@ defineOptions({
                 <input
                     type="number"
                     name="price"
-                    :value="state.data.price"
+                    :value="state.currentProduct.price"
                     min="1"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 mb-2"
                     required
@@ -139,7 +101,7 @@ defineOptions({
                     >
                         <option
                             :value="el.id"
-                            :selected="state.data.category_id === el.id"
+                            :selected="state.currentProduct.category_id === el.id"
                         >
                             {{ el.name }}
                         </option>
@@ -158,7 +120,7 @@ defineOptions({
                 <textarea
                     name="description"
                     class="w-full h-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 mb-2"
-                    :value="state.data.description"
+                    :value="state.currentProduct.description"
                 ></textarea>
                 <p class="text-sm text-red-500">
                     <span
@@ -176,7 +138,5 @@ defineOptions({
                 Сохранить
             </button>
         </form>
-
     </div>
-
 </template>

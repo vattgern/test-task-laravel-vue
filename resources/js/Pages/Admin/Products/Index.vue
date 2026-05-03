@@ -2,79 +2,58 @@
 import { router, Link } from "@inertiajs/vue3";
 import { onMounted, ref, reactive } from "vue";
 import { useAuth } from "../../../Composables/useAuth";
+import { useProductApi } from "../../../Composables/useProductAPI";
 
-import Request from "../../../Vendor/Request";
 import Loader from "../../../Components/Loader.vue";
 import Product from "../../../Components/Product.vue";
 import Modal from "../../../Components/Modal.vue";
 import AdminLayout from "../../../Layouts/AdminLayout.vue";
 
+const { state, fetchCategories, fetchProducts, deleteProduct } = useProductApi();
 const { checkAuth } = useAuth();
 
-const isLoading = ref(false);
 const modalOpen = ref(false);
 const modalData = ref(null);
 const selectedCategory = ref('');
-const state = reactive({
-    categories: [],
-    products: [],
-    meta: [],
-    url: location.origin + "/api/products"
-});
 
-const fetchProducts = () => {
-    isLoading.value = true;
-
-    Request.get(state.url)
-        .then(r => {
-            state.products = r.data;
-            state.meta = r.meta;
-        })
-        .finally(() => {
-            isLoading.value = false;
-        })
-};
-
-const fetchCategories = () => {
-    Request.get('/api/categories')
-        .then(r => {
-            state.categories = r;
-        })
+const getCurrentParams = () => {
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    if (state.meta?.current_page)
+        params.page = state.meta.current_page;
+    return params;
 }
-const handlePage = (v) => {
+
+const refreshProducts = async () => {
+    let params = getCurrentParams();
+
+    await fetchProducts(params);
+
+    if (state.products.length === 0 && params.page > 1) {
+        params.page--;
+        await fetchProducts(params);
+    }
+}
+
+const handlePage = async (v) => {
     if (!v.url) return;
 
-    state.url = v.url;
-    fetchProducts();
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    params.page = v.page;
+
+    await fetchProducts(params);
 }
 
-const handleCategory = () => {
-    let url = new URL(state.url);
-    if (selectedCategory.value === '') {
-        url.searchParams.delete('category_id');
-    } else if (url.searchParams.has('category_id')) {
-        url.searchParams.set('category_id', selectedCategory.value);
-    } else {
-        url.searchParams.append('category_id', selectedCategory.value);
-    }
+const handleCategory = async () => {
+    let params = {};
+    if (selectedCategory.value !== '')
+        params.category_id = selectedCategory.value;
+    params.page = 1;
 
-    state.url = url.toString();
-    fetchProducts();
-};
-
-const removeProduct = () => {
-    let token = localStorage.getItem('auth_token');
-    if (!token || !modalData.value) return;
-
-    Request.delete(`/api/products/${modalData.value}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-        .then(r => {
-            fetchProducts();
-            modalData.value = null;
-        });
+    await fetchProducts(params);
 };
 
 const handleRemove = (id) => {
@@ -82,10 +61,23 @@ const handleRemove = (id) => {
     modalData.value = id;
 }
 
-onMounted(() => {
-    checkAuth();
-    fetchCategories();
-    fetchProducts();
+const removeProduct = async () => {
+    if (!modalData.value) return;
+
+    const deleteId = modalData.value;
+    modalOpen.value = false;
+
+    const success = await deleteProduct(deleteId);
+    if (success) await refreshProducts();
+    modalData.value = null;
+};
+
+onMounted(async () => {
+    await checkAuth();
+    await Promise.all([
+        fetchCategories(),
+        fetchProducts()
+    ]);
 })
 defineOptions({
     layout: AdminLayout
@@ -96,7 +88,7 @@ defineOptions({
     <div class="container mx-auto px-4 py-8">
 
         <Transition name="fade">
-            <Loader v-if="isLoading" />
+            <Loader v-if="state.loading" />
         </Transition>
 
         <div class="w-full mb-6 flex flex-row justify-between items-center">
@@ -126,9 +118,10 @@ defineOptions({
             </Link>
         </div>
 
-
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            v-if="state.products.length"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
             <Product
                 v-for="el in state.products"
                 :key="el.id"
@@ -137,6 +130,9 @@ defineOptions({
                 @remove="handleRemove"
             />
         </div>
+        <div v-else>
+            <p class="text-center">Ничего не найдено</p>
+        </div>
 
         <div class="mt-8">
             <div class="flex justify-center gap-2">
@@ -144,7 +140,7 @@ defineOptions({
                     v-for="(el, index) in state.meta.links"
                     :key="index"
                     @click="handlePage(el)"
-                    class="px-3 py-1 border rounded"
+                    class="cursor-pointer px-3 py-1 border rounded"
                     :class="{ 'bg-blue-500 text-white': el.active }"
                     v-html="el.label"
                 />
