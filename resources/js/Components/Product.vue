@@ -15,7 +15,7 @@ const props = defineProps({
 });
 const emits = defineEmits(['update', 'remove']);
 const update = (id) => {
-    router.visit(`/admin/prodcuts/${id}/edit`);
+    router.visit(`/admin/products/${id}/edit`);
 };
 const remove = (id) => {
 
