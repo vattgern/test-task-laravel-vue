@@ -2,24 +2,12 @@
 import { router } from "@inertiajs/vue3";
 import { reactive, onMounted } from "vue";
 import Request from "../../Vendor/Request";
+import { useAuth } from "../../Composables/useAuth";
 
 const state = reactive({
     errors: {}
 });
-
-const checkAuth = () => {
-    let token = localStorage.getItem('auth_token');
-    if (!token) return false;
-
-    Request.get('/api/user', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-        .then(r => {
-            router.visit('/admin');
-        });
-}
+const { checkAuth, isAuth } = useAuth();
 
 const handleLogin = (e) => {
     const fd = new FormData(e.target);
@@ -36,14 +24,14 @@ const handleLogin = (e) => {
         })
 };
 onMounted(() => {
-    checkAuth();
-})
+    if (isAuth.value) router.visit('/admin');
+});
 </script>
 
 <template>
     <div class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-lg shadow-md w-96">
-            <h2 class="text-2xl font-bold mb-6">Вход в админ-панель</h2>
+            <h1 class="text-2xl font-bold mb-6">Вход в админ-панель</h1>
 
             <form @submit.prevent="handleLogin">
                 <div class="mb-4">

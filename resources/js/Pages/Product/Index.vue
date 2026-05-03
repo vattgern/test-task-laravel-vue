@@ -1,7 +1,8 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
-import Request from "../../Vendor/Request";
 import { onMounted, ref, reactive, computed } from "vue";
+import { Link } from "@inertiajs/vue3";
+
+import Request from "../../Vendor/Request";
 import Loader from "../../Components/Loader.vue";
 
 const props = defineProps({

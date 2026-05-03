@@ -1,10 +1,15 @@
 <script setup>
 import { router, Link } from "@inertiajs/vue3";
 import { onMounted, ref, reactive } from "vue";
+import { useAuth } from "../../../Composables/useAuth";
+
 import Request from "../../../Vendor/Request";
 import Loader from "../../../Components/Loader.vue";
 import Product from "../../../Components/Product.vue";
 import Modal from "../../../Components/Modal.vue";
+import AdminLayout from "../../../Layouts/AdminLayout.vue";
+
+const { checkAuth } = useAuth();
 
 const isLoading = ref(false);
 const modalOpen = ref(false);
@@ -29,6 +34,7 @@ const fetchProducts = () => {
             isLoading.value = false;
         })
 };
+
 const fetchCategories = () => {
     Request.get('/api/categories')
         .then(r => {
@@ -56,23 +62,6 @@ const handleCategory = () => {
     fetchProducts();
 };
 
-const clear = () => {
-    localStorage.removeItem('auth_token');
-    router.visit('/admin/login');
-};
-
-const checkAuth = () => {
-    let token = localStorage.getItem('auth_token');
-    if (!token) clear();
-
-    Request.get('/api/user', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-        .catch(err => clear());
-};
-
 const removeProduct = () => {
     let token = localStorage.getItem('auth_token');
     if (!token || !modalData.value) return;
@@ -98,6 +87,9 @@ onMounted(() => {
     fetchCategories();
     fetchProducts();
 })
+defineOptions({
+    layout: AdminLayout
+})
 </script>
 
 <template>
@@ -106,8 +98,6 @@ onMounted(() => {
         <Transition name="fade">
             <Loader v-if="isLoading" />
         </Transition>
-
-        <h1 class="text-3xl font-bold mb-8">Каталог товаров</h1>
 
         <div class="w-full mb-6 flex flex-row justify-between items-center">
             <div>
