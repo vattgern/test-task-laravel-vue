@@ -15,7 +15,6 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-
         if ($request->category_id && !is_numeric($request->category_id))
             return response()->json(['message' => 'Параметр некорректен'], 400);
 
@@ -23,6 +22,7 @@ class ProductController extends Controller
             ->when($request->category_id, function ($query, $categoryId) {
                 return $query->where('category_id', $categoryId);
             })
+            ->orderBy('id', 'asc')
             ->paginate($request->per_page ?? 15)
             ->withQueryString();
 
