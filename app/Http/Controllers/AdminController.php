@@ -34,4 +34,15 @@ class AdminController extends Controller
             'title' => 'Создание товара'
         ]);
     }
+
+    public function productEdit(string $id)
+    {
+        if (!is_numeric($id))
+            return abort(404);
+
+        return Inertia::render('Admin/Products/Edit', [
+            'title' => 'Редактирование товара №' . $id,
+            'product'   => (int) $id
+        ]);
+    }
 }

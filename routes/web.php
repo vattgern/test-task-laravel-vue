@@ -9,5 +9,6 @@ Route::get('/product/{id}',             [PageController::class, 'product']);
 
 Route::get('/admin/products',           [AdminController::class, 'products']);
 Route::get('/admin/products/create',    [AdminController::class, 'productCreate']);
+Route::get('/admin/products/{id}/edit', [AdminController::class, 'productEdit']);
 Route::get('/admin/login',              [AdminController::class, 'login']);
 Route::get('/admin',                    [AdminController::class, 'index']);
