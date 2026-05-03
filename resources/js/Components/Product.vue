@@ -18,20 +18,7 @@ const update = (id) => {
     router.visit(`/admin/products/${id}/edit`);
 };
 const remove = (id) => {
-
     emits('remove', id);
-
-    // let token = localStorage.getItem('auth_token');
-    // if (!token) return;
-
-    // Request.delete(`/api/products/${id}`, {
-    //     headers: {
-    //         'Authorization': `Bearer ${token}`
-    //     }
-    // })
-    //     .then(r => {
-    //         emits('update');
-    //     });
 };
 </script>
 
@@ -42,12 +29,13 @@ const remove = (id) => {
         <p class="text-lg font-bold text-green-600 mb-2">{{ props.data.price }}</p>
         <p class="text-gray-700 mb-4">{{ props.data.description }}</p>
 
-        <Link
+        <a
             class="text-blue-500 hover:underline"
             :href="`/product/${props.data.id}`"
+            target="_blank"
         >
             Подробнее
-        </Link>
+        </a>
 
         <div
             v-if="props.isAdmin"
