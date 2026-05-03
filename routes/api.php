@@ -17,6 +17,8 @@ Route::get('products/{id}', [ProductController::class, 'show']);
 Route::get('categories', CategoryListController::class);
 Route::post('login', LoginController::class);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('logout', LogoutController::class);
-    Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+    Route::get('logout',                        LogoutController::class);
+    Route::apiResource('products',              ProductController::class)->except(['index', 'show']);
+    Route::post('products/{id}/restore',        [ProductController::class, 'restore']);
+    Route::delete('products/{id}/force',        [ProductController::class, 'forceDestroy']);
 });

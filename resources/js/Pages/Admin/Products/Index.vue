@@ -9,12 +9,14 @@ import Product from "../../../Components/Product.vue";
 import Modal from "../../../Components/Modal.vue";
 import AdminLayout from "../../../Layouts/AdminLayout.vue";
 
-const { state, fetchCategories, fetchProducts, deleteProduct } = useProductApi();
+const { state, fetchCategories, fetchProducts, deleteProduct, restoreProduct, forceDeleteProduct } = useProductApi();
 const { checkAuth } = useAuth();
 
-const modalOpen = ref(false);
+const modalDeleteOpen = ref(false);
+const modalForceDeleteOpen = ref(false);
 const modalData = ref(null);
 const selectedCategory = ref('');
+const withTrashed = ref(false);
 
 const getCurrentParams = () => {
     let params = {};
@@ -22,6 +24,8 @@ const getCurrentParams = () => {
         params.category_id = selectedCategory.value;
     if (state.meta?.current_page)
         params.page = state.meta.current_page;
+    params.trashed = withTrashed.value;
+
     return params;
 }
 
@@ -42,6 +46,7 @@ const handlePage = async (v) => {
     let params = {};
     if (selectedCategory.value !== '')
         params.category_id = selectedCategory.value;
+    params.trashed = withTrashed.value;
     params.page = v.page;
 
     await fetchProducts(params);
@@ -52,20 +57,42 @@ const handleCategory = async () => {
     if (selectedCategory.value !== '')
         params.category_id = selectedCategory.value;
     params.page = 1;
+    params.trashed = withTrashed.value;
 
     await fetchProducts(params);
 };
 
 const handleRemove = (id) => {
-    modalOpen.value = true;
+    modalDeleteOpen.value = true;
     modalData.value = id;
+}
+
+const handleForceRemove = (id) => {
+    modalForceDeleteOpen.value = true;
+    modalData.value = id;
+}
+
+const handleRestore = async (id) => {
+    const success = await restoreProduct(id);
+    if (success) await refreshProducts();
+};
+
+const forceRemoveProduct = async () => {
+    if (!modalData.value) return;
+
+    const deleteId = modalData.value;
+    modalForceDeleteOpen.value = false;
+
+    const success = await forceDeleteProduct(deleteId);
+    if (success) await refreshProducts();
+    modalData.value = null;
 }
 
 const removeProduct = async () => {
     if (!modalData.value) return;
 
     const deleteId = modalData.value;
-    modalOpen.value = false;
+    modalDeleteOpen.value = false;
 
     const success = await deleteProduct(deleteId);
     if (success) await refreshProducts();
@@ -92,21 +119,33 @@ defineOptions({
         </Transition>
 
         <div class="w-full mb-6 flex flex-row justify-between items-center">
-            <div>
-                <label class="block text-sm font-medium mb-2">Фильтр по категории</label>
-                <select
-                    v-model="selectedCategory"
-                    class="border rounded-lg px-4 py-2 w-64"
-                    @change="handleCategory"
-                >
-                    <option value="">Все категории</option>
-                    <template
-                        v-for="el in state.categories"
-                        :key="el.id"
+            <div class="flex flex-row gap-10">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Фильтр по категории</label>
+                    <select
+                        v-model="selectedCategory"
+                        class="border rounded-lg px-4 py-2 w-64"
+                        @change="handleCategory"
                     >
-                        <option :value="el.id">{{ el.name }}</option>
-                    </template>
-                </select>
+                        <option value="">Все категории</option>
+                        <template
+                            v-for="el in state.categories"
+                            :key="el.id"
+                        >
+                            <option :value="el.id">{{ el.name }}</option>
+                        </template>
+                    </select>
+                </div>
+
+                <label class="cursor-pointer flex flex-row items-center space-x-3">
+                    <span class="block text-sm font-medium mb-2">С корзиной</span>
+                    <input
+                        type="checkbox"
+                        v-model="withTrashed"
+                        class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                        @change="refreshProducts"
+                    />
+                </label>
             </div>
 
             <Link
@@ -128,6 +167,8 @@ defineOptions({
                 :data="el"
                 :is-admin="true"
                 @remove="handleRemove"
+                @restore="handleRestore"
+                @force-delete="handleForceRemove"
             />
         </div>
         <div v-else>
@@ -149,9 +190,15 @@ defineOptions({
     </div>
 
     <Modal
-        v-model:is-open="modalOpen"
+        v-model:is-open="modalDeleteOpen"
         title="Подтверждение действия"
         content="Вы уверены, что хотите удалить эту запись?"
         @confirm="removeProduct"
+    />
+    <Modal
+        v-model:is-open="modalForceDeleteOpen"
+        title="Подтверждение действия"
+        content="Вы уверены, что хотите полностью удалить эту запись?"
+        @confirm="forceRemoveProduct"
     />
 </template>

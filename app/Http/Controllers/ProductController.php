@@ -22,6 +22,11 @@ class ProductController extends Controller
             ->when($request->category_id, function ($query, $categoryId) {
                 return $query->where('category_id', $categoryId);
             })
+            ->when($request->trashed == 'true', function ($query) {
+                if (auth()->guard('sanctum')->check()) {
+                    return $query->withTrashed();
+                }
+            })
             ->orderBy('id', 'asc')
             ->paginate($request->per_page ?? 15)
             ->withQueryString();
@@ -86,6 +91,47 @@ class ProductController extends Controller
             return response()->json([
                 'message'   => 'Server error'
             ], $e->getCode());
+        }
+    }
+
+    public function forceDestroy(string $id)
+    {
+        try {
+            if (!is_numeric($id))
+                return response()->json(['message' => 'Параметр некорректен'], 400);
+            $product = Product::withTrashed()->find($id);
+            if (!$product)
+                return response()->json(['message' => 'Запись не найдена'], 404);
+
+            $product->forceDelete();
+            return response()->json([
+                'message'   => 'Товар полностью удален'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message'   => 'Server error'
+            ], $e->getCode());
+        }
+    }
+
+    public function restore(string $id)
+    {
+        try {
+            if (!is_numeric($id))
+                return response()->json(['message' => 'Параметр некорректен'], 400);
+            $product = Product::withTrashed()->find($id);
+            if (!$product)
+                return response()->json(['message' => 'Запись не найдена'], 404);
+
+            $product->restore();
+
+            return response()->json([
+                'message'   => 'Товар восстановлен'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message'   => 'Server error'
+            ], 500);
         }
     }
 }

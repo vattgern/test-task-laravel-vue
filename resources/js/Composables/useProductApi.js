@@ -142,6 +142,29 @@ export function useProductApi() {
         }
     }
 
+    const restoreProduct = async (id) => {
+        const token = getToken();
+        if (!token) {
+            router.visit('/admin/login');
+            return false;
+        }
+
+        state.loading = true;
+
+        try {
+            await Request.post(`/api/products/${id}/restore`, {}, {
+                headers: getHeaders()
+            })
+
+            return true;
+        } catch (error) {
+            console.error('Error restoring product:', error)
+            return false
+        } finally {
+            state.loading = false;
+        }
+    }
+
     const deleteProduct = async (id) => {
         const token = getToken();
         if (!token) {
@@ -153,6 +176,29 @@ export function useProductApi() {
 
         try {
             await Request.delete(`/api/products/${id}`, {
+                headers: getHeaders()
+            })
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting product:', error)
+            return false
+        } finally {
+            state.loading = false;
+        }
+    }
+
+    const forceDeleteProduct = async (id) => {
+        const token = getToken();
+        if (!token) {
+            router.visit('/admin/login');
+            return false;
+        }
+
+        state.loading = true;
+
+        try {
+            await Request.delete(`/api/products/${id}/force`, {
                 headers: getHeaders()
             })
 
@@ -188,6 +234,8 @@ export function useProductApi() {
         createProduct,
         updateProduct,
         deleteProduct,
+        restoreProduct,
+        forceDeleteProduct,
 
         clearError,
         resetState,
